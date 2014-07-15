@@ -13,7 +13,7 @@
 #   under the License.
 #
 
-"""Project action implementations"""
+"""Sip action implementations"""
 import logging
 import six
 
@@ -25,44 +25,44 @@ from openstackclient.common import parseractions
 from openstackclient.common import utils
 
 
-class CreateProject(show.ShowOne):
-    """Create new project"""
+class CreateSip(show.ShowOne):
+    """Create new sip"""
 
-    log = logging.getLogger(__name__ + '.CreateProject')
+    log = logging.getLogger(__name__ + '.CreateSip')
 
     def get_parser(self, prog_name):
-        parser = super(CreateProject, self).get_parser(prog_name)
+        parser = super(CreateSip, self).get_parser(prog_name)
         parser.add_argument(
             'name',
-            metavar='<project-name>',
-            help='New project name',
+            metavar='<sip-name>',
+            help='New sip name',
         )
         parser.add_argument(
-            '--domain',
-            metavar='<project-domain>',
-            help='Domain owning the project (name or ID)',
+            '--sid',
+            metavar='<sip-sid>',
+            help='Sid owning the sip (name or ID)',
         )
         parser.add_argument(
             '--description',
-            metavar='<project-description>',
-            help='New project description',
+            metavar='<sip-description>',
+            help='New sip description',
         )
         enable_group = parser.add_mutually_exclusive_group()
         enable_group.add_argument(
             '--enable',
             action='store_true',
-            help='Enable project',
+            help='Enable sip',
         )
         enable_group.add_argument(
             '--disable',
             action='store_true',
-            help='Disable project',
+            help='Disable sip',
         )
         parser.add_argument(
             '--property',
             metavar='<key=value>',
             action=parseractions.KeyValueAction,
-            help='Property to add for this project '
+            help='Property to add for this sip '
                  '(repeat option to set multiple properties)',
         )
         return parser
@@ -71,13 +71,13 @@ class CreateProject(show.ShowOne):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
 
-        if parsed_args.domain:
-            domain = utils.find_resource(
-                identity_client.domains,
-                parsed_args.domain,
+        if parsed_args.sid:
+            sid = utils.find_resource(
+                identity_client.sids,
+                parsed_args.sid,
             ).id
         else:
-            domain = None
+            sid = None
 
         enabled = True
         if parsed_args.disable:
@@ -86,30 +86,30 @@ class CreateProject(show.ShowOne):
         if parsed_args.property:
             kwargs = parsed_args.property.copy()
 
-        project = identity_client.projects.create(
+        sip = identity_client.sips.create(
             name=parsed_args.name,
-            domain=domain,
+            sid=sid,
             description=parsed_args.description,
             enabled=enabled,
             **kwargs
         )
 
         info = {}
-        info.update(project._info)
+        info.update(sip._info)
         return zip(*sorted(six.iteritems(info)))
 
 
-class DeleteProject(command.Command):
-    """Delete project"""
+class DeleteSip(command.Command):
+    """Delete sip"""
 
-    log = logging.getLogger(__name__ + '.DeleteProject')
+    log = logging.getLogger(__name__ + '.DeleteSip')
 
     def get_parser(self, prog_name):
-        parser = super(DeleteProject, self).get_parser(prog_name)
+        parser = super(DeleteSip, self).get_parser(prog_name)
         parser.add_argument(
-            'project',
-            metavar='<project>',
-            help='Project to delete (name or ID)',
+            'sip',
+            metavar='<sip>',
+            help='Sip to delete (name or ID)',
         )
         return parser
 
@@ -117,22 +117,22 @@ class DeleteProject(command.Command):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
 
-        project = utils.find_resource(
-            identity_client.projects,
-            parsed_args.project,
+        sip = utils.find_resource(
+            identity_client.sips,
+            parsed_args.sip,
         )
 
-        identity_client.projects.delete(project.id)
+        identity_client.sips.delete(sip.id)
         return
 
 
-class ListProject(lister.Lister):
-    """List projects"""
+class ListSip(lister.Lister):
+    """List sips"""
 
-    log = logging.getLogger(__name__ + '.ListProject')
+    log = logging.getLogger(__name__ + '.ListSip')
 
     def get_parser(self, prog_name):
-        parser = super(ListProject, self).get_parser(prog_name)
+        parser = super(ListSip, self).get_parser(prog_name)
         parser.add_argument(
             '--long',
             action='store_true',
@@ -140,9 +140,9 @@ class ListProject(lister.Lister):
             help='List additional fields in output',
         )
         parser.add_argument(
-            '--domain',
-            metavar='<project-domain>',
-            help='Filter by a specific domain',
+            '--sid',
+            metavar='<sip-sid>',
+            help='Filter by a specific sid',
         )
         return parser
 
@@ -150,16 +150,16 @@ class ListProject(lister.Lister):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
         if parsed_args.long:
-            columns = ('ID', 'Name', 'Domain ID', 'Description', 'Enabled')
+            columns = ('ID', 'Name', 'Sid ID', 'Description', 'Enabled')
         else:
             columns = ('ID', 'Name')
         kwargs = {}
-        if parsed_args.domain:
-            kwargs['domain'] = utils.find_resource(
-                identity_client.domains,
-                parsed_args.domain,
+        if parsed_args.sid:
+            kwargs['sid'] = utils.find_resource(
+                identity_client.sids,
+                parsed_args.sid,
             ).id
-        data = identity_client.projects.list(**kwargs)
+        data = identity_client.sips.list(**kwargs)
         return (columns,
                 (utils.get_item_properties(
                     s, columns,
@@ -167,49 +167,49 @@ class ListProject(lister.Lister):
                 ) for s in data))
 
 
-class SetProject(command.Command):
-    """Set project properties"""
+class SetSip(command.Command):
+    """Set sip properties"""
 
-    log = logging.getLogger(__name__ + '.SetProject')
+    log = logging.getLogger(__name__ + '.SetSip')
 
     def get_parser(self, prog_name):
-        parser = super(SetProject, self).get_parser(prog_name)
+        parser = super(SetSip, self).get_parser(prog_name)
         parser.add_argument(
-            'project',
-            metavar='<project>',
-            help='Project to change (name or ID)',
+            'sip',
+            metavar='<sip>',
+            help='Sip to change (name or ID)',
         )
         parser.add_argument(
             '--name',
-            metavar='<new-project-name>',
-            help='New project name',
+            metavar='<new-sip-name>',
+            help='New sip name',
         )
         parser.add_argument(
-            '--domain',
-            metavar='<project-domain>',
-            help='New domain owning the project (name or ID)',
+            '--sid',
+            metavar='<sip-sid>',
+            help='New sid owning the sip (name or ID)',
         )
         parser.add_argument(
             '--description',
-            metavar='<project-description>',
-            help='New project description',
+            metavar='<sip-description>',
+            help='New sip description',
         )
         enable_group = parser.add_mutually_exclusive_group()
         enable_group.add_argument(
             '--enable',
             action='store_true',
-            help='Enable project',
+            help='Enable sip',
         )
         enable_group.add_argument(
             '--disable',
             action='store_true',
-            help='Disable project',
+            help='Disable sip',
         )
         parser.add_argument(
             '--property',
             metavar='<key=value>',
             action=parseractions.KeyValueAction,
-            help='Property to add for this project '
+            help='Property to add for this sip '
                  '(repeat option to set multiple properties)',
         )
         return parser
@@ -220,24 +220,24 @@ class SetProject(command.Command):
 
         if (not parsed_args.name
                 and not parsed_args.description
-                and not parsed_args.domain
+                and not parsed_args.sid
                 and not parsed_args.enable
                 and not parsed_args.property
                 and not parsed_args.disable):
             return
 
-        project = utils.find_resource(
-            identity_client.projects,
-            parsed_args.project,
+        sip = utils.find_resource(
+            identity_client.sips,
+            parsed_args.sip,
         )
 
-        kwargs = project._info
+        kwargs = sip._info
         if parsed_args.name:
             kwargs['name'] = parsed_args.name
-        if parsed_args.domain:
-            kwargs['domain'] = utils.find_resource(
-                identity_client.domains,
-                parsed_args.domain,
+        if parsed_args.sid:
+            kwargs['sid'] = utils.find_resource(
+                identity_client.sids,
+                parsed_args.sid,
             ).id
         if parsed_args.description:
             kwargs['description'] = parsed_args.description
@@ -249,35 +249,35 @@ class SetProject(command.Command):
             kwargs.update(parsed_args.property)
         if 'id' in kwargs:
             del kwargs['id']
-        if 'domain_id' in kwargs:
+        if 'sid_id' in kwargs:
             # Hack around borken Identity API arg names
             kwargs.update(
-                {'domain': kwargs.pop('domain_id')}
+                {'sid': kwargs.pop('sid_id')}
             )
 
-        identity_client.projects.update(project.id, **kwargs)
+        identity_client.sips.update(sip.id, **kwargs)
         return
 
 
-class ShowProject(show.ShowOne):
-    """Show project command"""
+class ShowSip(show.ShowOne):
+    """Show sip command"""
 
-    log = logging.getLogger(__name__ + '.ShowProject')
+    log = logging.getLogger(__name__ + '.ShowSip')
 
     def get_parser(self, prog_name):
-        parser = super(ShowProject, self).get_parser(prog_name)
+        parser = super(ShowSip, self).get_parser(prog_name)
         parser.add_argument(
-            'project',
-            metavar='<project>',
-            help='Name or ID of project to display')
+            'sip',
+            metavar='<sip>',
+            help='Name or ID of sip to display')
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        project = utils.find_resource(identity_client.projects,
-                                      parsed_args.project)
+        sip = utils.find_resource(identity_client.sips,
+                                      parsed_args.sip)
 
         info = {}
-        info.update(project._info)
+        info.update(sip._info)
         return zip(*sorted(six.iteritems(info)))

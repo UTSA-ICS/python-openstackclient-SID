@@ -60,6 +60,17 @@ class AddRole(command.Command):
             metavar='<project>',
             help='Name or ID of project associated with user or group',
         )
+        sid_or_sip = parser.add_mutually_exclusive_group()
+        sid_or_sip.add_argument(
+            '--sid',
+            metavar='<sid>',
+            help='Name or ID of sid associated with user or group',
+        )
+        sid_or_sip.add_argument(
+            '--sip',
+            metavar='<sip>',
+            help='Name or ID of sip associated with user or group',
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -102,6 +113,34 @@ class AddRole(command.Command):
                 role.id,
                 user=user.id,
                 project=project.id,
+            )
+        elif parsed_args.user and parsed_args.sid:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sid = utils.find_resource(
+                identity_client.sids,
+                parsed_args.sid,
+            )
+            identity_client.roles.grant4sip(
+                role.id,
+                user=user.id,
+                sid=sid.id,
+            )
+        elif parsed_args.user and parsed_args.sip:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sip = utils.find_resource(
+                identity_client.sips,
+                parsed_args.sip,
+            )
+            identity_client.roles.grant4sip(
+                role.id,
+                user=user.id,
+                sip=sip.id,
             )
         elif parsed_args.group and parsed_args.domain:
             group = utils.find_resource(
@@ -237,6 +276,17 @@ class RemoveRole(command.Command):
             metavar='<project>',
             help='Name or ID of project associated with user or group',
         )
+        sid_or_sip = parser.add_mutually_exclusive_group()
+        sid_or_sip.add_argument(
+            '--sid',
+            metavar='<sid>',
+            help='Name or ID of sid associated with user or group',
+        )
+        sid_or_sip.add_argument(
+            '--sip',
+            metavar='<sip>',
+            help='Name or ID of sip associated with user or group',
+        )
         return parser
 
     def take_action(self, parsed_args):
@@ -279,6 +329,34 @@ class RemoveRole(command.Command):
                 role.id,
                 user=user.id,
                 project=project.id,
+            )
+        elif parsed_args.user and parsed_args.sid:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sid = utils.find_resource(
+                identity_client.sids,
+                parsed_args.sid,
+            )
+            identity_client.roles.revoke4sip(
+                role.id,
+                user=user.id,
+                sid=sid.id,
+            )
+        elif parsed_args.user and parsed_args.sip:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sip = utils.find_resource(
+                identity_client.sips,
+                parsed_args.sip,
+            )
+            identity_client.roles.revoke4sip(
+                role.id,
+                user=user.id,
+                sip=sip.id,
             )
         elif parsed_args.group and parsed_args.domain:
             group = utils.find_resource(

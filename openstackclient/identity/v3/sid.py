@@ -13,7 +13,7 @@
 #   under the License.
 #
 
-"""Identity v3 Domain action implementations"""
+"""Identity v3 Sid action implementations"""
 
 import logging
 import six
@@ -26,22 +26,22 @@ from cliff import show
 from openstackclient.common import utils
 
 
-class CreateDomain(show.ShowOne):
-    """Create domain command"""
+class CreateSid(show.ShowOne):
+    """Create sid command"""
 
-    log = logging.getLogger(__name__ + '.CreateDomain')
+    log = logging.getLogger(__name__ + '.CreateSid')
 
     def get_parser(self, prog_name):
-        parser = super(CreateDomain, self).get_parser(prog_name)
+        parser = super(CreateSid, self).get_parser(prog_name)
         parser.add_argument(
             'name',
-            metavar='<domain-name>',
-            help='New domain name',
+            metavar='<sid-name>',
+            help='New sid name',
         )
         parser.add_argument(
             '--description',
-            metavar='<domain-description>',
-            help='New domain description',
+            metavar='<sid-description>',
+            help='New sid description',
         )
         enable_group = parser.add_mutually_exclusive_group()
         enable_group.add_argument(
@@ -49,58 +49,58 @@ class CreateDomain(show.ShowOne):
             dest='enabled',
             action='store_true',
             default=True,
-            help='Enable domain')
+            help='Enable sid')
         enable_group.add_argument(
             '--disable',
             dest='enabled',
             action='store_false',
-            help='Disable domain')
+            help='Disable sid')
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        domain = identity_client.domains.create(
+        sid = identity_client.sids.create(
             name=parsed_args.name,
             description=parsed_args.description,
             enabled=parsed_args.enabled,
         )
 
-        return zip(*sorted(six.iteritems(domain._info)))
+        return zip(*sorted(six.iteritems(sid._info)))
 
 
-class DeleteDomain(command.Command):
-    """Delete domain command"""
+class DeleteSid(command.Command):
+    """Delete sid command"""
 
-    log = logging.getLogger(__name__ + '.DeleteDomain')
+    log = logging.getLogger(__name__ + '.DeleteSid')
 
     def get_parser(self, prog_name):
-        parser = super(DeleteDomain, self).get_parser(prog_name)
+        parser = super(DeleteSid, self).get_parser(prog_name)
         parser.add_argument(
-            'domain',
-            metavar='<domain>',
-            help='Name or ID of domain to delete',
+            'sid',
+            metavar='<sid>',
+            help='Name or ID of sid to delete',
         )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        domain = utils.find_resource(identity_client.domains,
-                                     parsed_args.domain)
-        identity_client.domains.delete(domain.id)
+        sid = utils.find_resource(identity_client.sids,
+                                     parsed_args.sid)
+        identity_client.sids.delete(sid.id)
         return
 
 
-class ListDomain(lister.Lister):
-    """List domain command"""
+class ListSid(lister.Lister):
+    """List sid command"""
 
-    log = logging.getLogger(__name__ + '.ListDomain')
+    log = logging.getLogger(__name__ + '.ListSid')
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         columns = ('ID', 'Name', 'Enabled', 'Description')
-        data = self.app.client_manager.identity.domains.list()
+        data = self.app.client_manager.identity.sids.list()
         return (columns,
                 (utils.get_item_properties(
                     s, columns,
@@ -108,27 +108,27 @@ class ListDomain(lister.Lister):
                 ) for s in data))
 
 
-class SetDomain(command.Command):
-    """Set domain command"""
+class SetSid(command.Command):
+    """Set sid command"""
 
-    log = logging.getLogger(__name__ + '.SetDomain')
+    log = logging.getLogger(__name__ + '.SetSid')
 
     def get_parser(self, prog_name):
-        parser = super(SetDomain, self).get_parser(prog_name)
+        parser = super(SetSid, self).get_parser(prog_name)
         parser.add_argument(
-            'domain',
-            metavar='<domain>',
-            help='Name or ID of domain to change',
+            'sid',
+            metavar='<sid>',
+            help='Name or ID of sid to change',
         )
         parser.add_argument(
             '--name',
-            metavar='<new-domain-name>',
-            help='New domain name',
+            metavar='<new-sid-name>',
+            help='New sid name',
         )
         parser.add_argument(
             '--description',
-            metavar='<domain-description>',
-            help='New domain description',
+            metavar='<sid-description>',
+            help='New sid description',
         )
         enable_group = parser.add_mutually_exclusive_group()
         enable_group.add_argument(
@@ -136,21 +136,21 @@ class SetDomain(command.Command):
             dest='enabled',
             action='store_true',
             default=True,
-            help='Enable domain (default)',
+            help='Enable sid (default)',
         )
         enable_group.add_argument(
             '--disable',
             dest='enabled',
             action='store_false',
-            help='Disable domain',
+            help='Disable sid',
         )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        domain = utils.find_resource(identity_client.domains,
-                                     parsed_args.domain)
+        sid = utils.find_resource(identity_client.sids,
+                                     parsed_args.sid)
         kwargs = {}
         if parsed_args.name:
             kwargs['name'] = parsed_args.name
@@ -160,30 +160,30 @@ class SetDomain(command.Command):
             kwargs['enabled'] = parsed_args.enabled
 
         if not kwargs:
-            sys.stdout.write("Domain not updated, no arguments present")
+            sys.stdout.write("Sid not updated, no arguments present")
             return
-        identity_client.domains.update(domain.id, **kwargs)
+        identity_client.sids.update(sid.id, **kwargs)
         return
 
 
-class ShowDomain(show.ShowOne):
-    """Show domain command"""
+class ShowSid(show.ShowOne):
+    """Show sid command"""
 
-    log = logging.getLogger(__name__ + '.ShowDomain')
+    log = logging.getLogger(__name__ + '.ShowSid')
 
     def get_parser(self, prog_name):
-        parser = super(ShowDomain, self).get_parser(prog_name)
+        parser = super(ShowSid, self).get_parser(prog_name)
         parser.add_argument(
-            'domain',
-            metavar='<domain>',
-            help='Name or ID of domain to display',
+            'sid',
+            metavar='<sid>',
+            help='Name or ID of sid to display',
         )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        domain = utils.find_resource(identity_client.domains,
-                                     parsed_args.domain)
+        sid = utils.find_resource(identity_client.sids,
+                                     parsed_args.sid)
 
-        return zip(*sorted(six.iteritems(domain._info)))
+        return zip(*sorted(six.iteritems(sid._info)))
