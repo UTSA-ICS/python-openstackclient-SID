@@ -250,7 +250,13 @@ class ListUser(lister.Lister):
                            'Description', 'Email', 'Enabled')
             else:
                 columns = ('ID', 'Name')
-            data = self.app.client_manager.identity.users.list()
+	    kwargs = {}
+            if parsed_args.domain:
+                kwargs['domain'] = utils.find_resource(
+                    identity_client.domains,
+                    parsed_args.domain,
+                ).id
+            data = self.app.client_manager.identity.users.list(**kwargs)
 
         return (columns,
                 (utils.get_item_properties(

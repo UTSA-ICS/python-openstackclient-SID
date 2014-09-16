@@ -14,6 +14,8 @@
 #
 
 """Sip action implementations"""
+import traceback
+
 import logging
 import six
 
@@ -40,7 +42,7 @@ class CreateSip(show.ShowOne):
         parser.add_argument(
             '--sid',
             metavar='<sip-sid>',
-            help='Sid owning the sip (name or ID)',
+            help='Domain owning the sip (name or ID)',
         )
         parser.add_argument(
             '--description',
@@ -73,7 +75,7 @@ class CreateSip(show.ShowOne):
 
         if parsed_args.sid:
             sid = utils.find_resource(
-                identity_client.sids,
+                identity_client.domains,
                 parsed_args.sid,
             ).id
         else:
@@ -86,9 +88,9 @@ class CreateSip(show.ShowOne):
         if parsed_args.property:
             kwargs = parsed_args.property.copy()
 
-        sip = identity_client.sips.create(
+        sip = identity_client.projects.create(
             name=parsed_args.name,
-            sid=sid,
+            domain=sid,
             description=parsed_args.description,
             enabled=enabled,
             **kwargs
@@ -111,23 +113,37 @@ class DeleteSip(command.Command):
             metavar='<sip>',
             help='Sip to delete (name or ID)',
         )
+#        parser.add_argument(
+#            '--sid',
+#            metavar='<sip-sid>',
+#            help='Filter by a specific sid',
+#        )
         return parser
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
 
+#        if parsed_args.sid:
+#            sid = utils.find_resource(
+#                identity_client.domains,
+#                parsed_args.sid,
+#            ).id
+#        else:
+#            sid = None
+
         sip = utils.find_resource(
-            identity_client.sips,
+            identity_client.projects,
             parsed_args.sip,
         )
 
-        identity_client.sips.delete(sip.id)
+        identity_client.projects.delete(sip.id)
         return
 
 
 class ListSip(lister.Lister):
     """List sips"""
+    #traceback.print_stack()
 
     log = logging.getLogger(__name__ + '.ListSip')
 
@@ -150,16 +166,16 @@ class ListSip(lister.Lister):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
         if parsed_args.long:
-            columns = ('ID', 'Name', 'Sid ID', 'Description', 'Enabled')
+            columns = ('ID', 'Name', 'Domain ID', 'Description', 'Enabled')
         else:
             columns = ('ID', 'Name')
         kwargs = {}
         if parsed_args.sid:
             kwargs['sid'] = utils.find_resource(
-                identity_client.sids,
+                identity_client.domains,
                 parsed_args.sid,
             ).id
-        data = identity_client.sips.list(**kwargs)
+        data = identity_client.projects.list(**kwargs)
         return (columns,
                 (utils.get_item_properties(
                     s, columns,
@@ -227,7 +243,7 @@ class SetSip(command.Command):
             return
 
         sip = utils.find_resource(
-            identity_client.sips,
+            identity_client.projects,
             parsed_args.sip,
         )
 
@@ -252,10 +268,10 @@ class SetSip(command.Command):
         if 'sid_id' in kwargs:
             # Hack around borken Identity API arg names
             kwargs.update(
-                {'sid': kwargs.pop('sid_id')}
+                {'sid': kwargs.pop('domain_id')}
             )
 
-        identity_client.sips.update(sip.id, **kwargs)
+        identity_client.projects.update(sip.id, **kwargs)
         return
 
 
@@ -275,7 +291,7 @@ class ShowSip(show.ShowOne):
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
-        sip = utils.find_resource(identity_client.sips,
+        sip = utils.find_resource(identity_client.projects,
                                       parsed_args.sip)
 
         info = {}

@@ -49,24 +49,23 @@ class AddRole(command.Command):
             metavar='<group>',
             help='Name or ID of group to add a role',
         )
-        domain_or_project = parser.add_mutually_exclusive_group()
-        domain_or_project.add_argument(
+        domain_or_project_or_sid_or_sip = parser.add_mutually_exclusive_group()
+        domain_or_project_or_sid_or_sip.add_argument(
             '--domain',
             metavar='<domain>',
             help='Name or ID of domain associated with user or group',
         )
-        domain_or_project.add_argument(
+        domain_or_project_or_sid_or_sip.add_argument(
             '--project',
             metavar='<project>',
             help='Name or ID of project associated with user or group',
         )
-        sid_or_sip = parser.add_mutually_exclusive_group()
-        sid_or_sip.add_argument(
+        domain_or_project_or_sid_or_sip.add_argument(
             '--sid',
             metavar='<sid>',
             help='Name or ID of sid associated with user or group',
         )
-        sid_or_sip.add_argument(
+        domain_or_project_or_sid_or_sip.add_argument(
             '--sip',
             metavar='<sip>',
             help='Name or ID of sip associated with user or group',
@@ -78,7 +77,8 @@ class AddRole(command.Command):
         identity_client = self.app.client_manager.identity
 
         if (not parsed_args.user and not parsed_args.domain
-                and not parsed_args.group and not parsed_args.project):
+                and not parsed_args.group and not parsed_args.project
+ 		and not parsed_args.sid and not parsed_args.sip):
             return
 
         role = utils.find_resource(
@@ -114,34 +114,6 @@ class AddRole(command.Command):
                 user=user.id,
                 project=project.id,
             )
-        elif parsed_args.user and parsed_args.sid:
-            user = utils.find_resource(
-                identity_client.users,
-                parsed_args.user,
-            )
-            sid = utils.find_resource(
-                identity_client.sids,
-                parsed_args.sid,
-            )
-            identity_client.roles.grant4sip(
-                role.id,
-                user=user.id,
-                sid=sid.id,
-            )
-        elif parsed_args.user and parsed_args.sip:
-            user = utils.find_resource(
-                identity_client.users,
-                parsed_args.user,
-            )
-            sip = utils.find_resource(
-                identity_client.sips,
-                parsed_args.sip,
-            )
-            identity_client.roles.grant4sip(
-                role.id,
-                user=user.id,
-                sip=sip.id,
-            )
         elif parsed_args.group and parsed_args.domain:
             group = utils.find_resource(
                 identity_client.groups,
@@ -169,6 +141,34 @@ class AddRole(command.Command):
                 role.id,
                 group=group.id,
                 project=project.id,
+            )
+        elif parsed_args.user and parsed_args.sid:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sid = utils.find_resource(
+                identity_client.domains,
+                parsed_args.sid,
+            )
+            identity_client.roles.grant_sid(
+                role.id,
+                user=user.id,
+                sid=sid.id,
+            )
+        elif parsed_args.user and parsed_args.sip:
+            user = utils.find_resource(
+                identity_client.users,
+                parsed_args.user,
+            )
+            sip = utils.find_resource(
+                identity_client.projects,
+                parsed_args.sip,
+            )
+            identity_client.roles.grant_sid(
+                role.id,
+                user=user.id,
+                sip=sip.id,
             )
         else:
             sys.stderr.write("Role not added, incorrect set of arguments \
@@ -276,17 +276,6 @@ class RemoveRole(command.Command):
             metavar='<project>',
             help='Name or ID of project associated with user or group',
         )
-        sid_or_sip = parser.add_mutually_exclusive_group()
-        sid_or_sip.add_argument(
-            '--sid',
-            metavar='<sid>',
-            help='Name or ID of sid associated with user or group',
-        )
-        sid_or_sip.add_argument(
-            '--sip',
-            metavar='<sip>',
-            help='Name or ID of sip associated with user or group',
-        )
         return parser
 
     def take_action(self, parsed_args):
@@ -329,34 +318,6 @@ class RemoveRole(command.Command):
                 role.id,
                 user=user.id,
                 project=project.id,
-            )
-        elif parsed_args.user and parsed_args.sid:
-            user = utils.find_resource(
-                identity_client.users,
-                parsed_args.user,
-            )
-            sid = utils.find_resource(
-                identity_client.sids,
-                parsed_args.sid,
-            )
-            identity_client.roles.revoke4sip(
-                role.id,
-                user=user.id,
-                sid=sid.id,
-            )
-        elif parsed_args.user and parsed_args.sip:
-            user = utils.find_resource(
-                identity_client.users,
-                parsed_args.user,
-            )
-            sip = utils.find_resource(
-                identity_client.sips,
-                parsed_args.sip,
-            )
-            identity_client.roles.revoke4sip(
-                role.id,
-                user=user.id,
-                sip=sip.id,
             )
         elif parsed_args.group and parsed_args.domain:
             group = utils.find_resource(
